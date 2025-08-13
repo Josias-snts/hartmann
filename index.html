@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login — Irmãos Hartmann</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, Arial, sans-serif;
+    background-color: #0f172a;
+    color: #e5e7eb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .login-card {
+    background: #111827;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    width: 90%;
+    max-width: 340px;
+    text-align: center;
+  }
+  .logo {
+    width: 250px; /* tamanho da logo */
+    height: auto;
+    margin-bottom: 15px;
+  }
+  h1 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+  label {
+    font-size: 14px;
+    margin-top: 10px;
+    display: block;
+    color: #cbd5e1;
+    text-align: left;
+  }
+  input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #0b1220;
+    color: #e5e7eb;
+    margin-top: 5px;
+  }
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 18px;
+    border-radius: 12px;
+    border: 0;
+    background: #0ea5e9;
+    color: #001018;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .error {
+    color: #f87171;
+    margin-top: 10px;
+    text-align: center;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <img src="img/logo-hartmann.png" alt="Logo" class="logo">
+  <h1>ENTRAR HARTMANN</h1>
+  <label>Usuário</label>
+  <input type="text" id="usuario" placeholder="Digite o usuário">
+  
+  <label>Senha</label>
+  <input type="password" id="senha" placeholder="Digite a senha">
+  
+  <button onclick="fazerLogin()">Entrar</button>
+  
+  <div class="error" id="erro"></div>
+</div>
+
+<script>
+  const USUARIO_CORRETO = "Hartmann";
+  const SENHA_CORRETA = "admin";
+
+  function fazerLogin() {
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+    const erro = document.getElementById("erro");
+
+    if (usuario === USUARIO_CORRETO && senha === SENHA_CORRETA) {
+      erro.textContent = "";
+      localStorage.setItem("usuarioLogado", usuario);
+      window.location.href = "menu.html"; // troque para a página do seu app
+    } else {
+      erro.textContent = "Usuário ou senha incorretos!";
+    }
+  }
+</script>
+
+</body>
+</html>

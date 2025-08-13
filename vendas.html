@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Vender — Irmãos Hartmann</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0ea5e9">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+
+<style>
+  :root{
+    --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
+    --border:#2c3448; --green:#10f7a0; --orange:#f59e0b; --blue:#0ea5e9; --danger:#ef4444;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:14px 20px 20px}
+  .topbar{display:flex;justify-content:flex-end;align-items:center;margin-bottom:8px}
+  .topbar a{font-size:13px;color:#93c5fd;text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:10px}
+  .topbar a:active{transform:translateY(1px)}
+  .card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+  label{font-size:14px;color:var(--muted);margin-top:10px;display:block}
+
+  input,select,textarea{
+    width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);
+    background:#0b1220;color:var(--text);margin-top:5px;margin-bottom:10px;text-transform:uppercase;
+    caret-color:#e5e7eb;
+  }
+  input::placeholder, textarea::placeholder{color:#6b7280}
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill{
+    -webkit-text-fill-color: var(--text);
+    -webkit-box-shadow: 0 0 0px 1000px #0b1220 inset;
+            box-shadow: 0 0 0px 1000px #0b1220 inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid #334155}
+
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;height:50px;border-radius:14px;
+    font-weight:800;font-size:16px;border:0;cursor:pointer;user-select:none
+  }
+  .btn-green{background:var(--green);color:#001c14}
+  .btn-orange{background:var(--orange);color:#1f1300}
+  .btn-blue{background:var(--blue);color:#001018}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);height:36px;border-radius:10px;font-weight:700;padding:0 10px}
+
+  .preview-title{color:var(--muted);font-size:12px;margin-top:10px;text-align:left;}
+  .preview{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap; word-break: break-word; line-height: 1.2;
+    margin: 8px 0 0; color: var(--text); width: 100%; background: transparent; padding: 0; border: 0;
+  }
+
+  /* Modal de edição */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:flex-end; justify-content:center; z-index:1000;
+  }
+  .modal{
+    width:100%; max-width:720px; background:#0b1220; border:1px solid var(--border); border-radius:16px 16px 0 0;
+    box-shadow:0 -20px 60px rgba(0,0,0,.5); padding:14px; max-height:80vh; overflow:auto;
+  }
+  .modal h3{margin:0 0 10px; font-size:16px; color:#cbd5e1}
+  .itemRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--border)}
+  .itemRow:first-child{border-top:0}
+  .itemInfo{font-size:14px;color:#cbd5e1}
+  .itemInfo b{color:#e5e7eb}
+  .actions{display:flex;gap:8px}
+  .btn-small{height:36px; font-size:14px; padding:0 12px; border-radius:10px}
+  .btn-outline{background:transparent; border:1px solid var(--border); color:var(--text)}
+  .modal-footer{display:flex; justify-content:flex-end; gap:8px; margin-top:12px}
+</style>
+</head>
+<body>
+
+<!-- Banner de instalação PWA (dispara o prompt) -->
+<div id="install-bar" style="
+  position:sticky;top:0;z-index:50;display:none;align-items:center;justify-content:space-between;gap:10px;
+  background:#0b1220;border-bottom:1px solid var(--border);padding:10px 14px;font-family:system-ui,Arial,sans-serif;color:#e5e7eb;">
+  <div>Instale o app <b>Irmãos Hartmann</b> no seu celular</div>
+  <button id="installBtn" style="background:#0ea5e9;color:#001018;border:0;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer">Instalar</button>
+</div>
+<div id="ios-tip" style="display:none;color:#9ca3af;font-size:13px;margin:10px 14px 0;font-family:system-ui,Arial,sans-serif">
+  No iPhone: toque em <b>Compartilhar</b> → <b>Adicionar à Tela de Início</b> para instalar.
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a href="menu.html">Voltar ao menu</a>
+  </div>
+
+  <div class="card">
+    <label>Cliente</label>
+    <input type="text" id="cliente" placeholder="NOME DO CLIENTE">
+
+    <div class="row2">
+      <div>
+        <label>Placa</label>
+        <input type="text" id="placa" placeholder="ABC1D23">
+      </div>
+      <div>
+        <label>Pedra</label>
+        <input type="number" id="pedra" placeholder="07" inputmode="numeric">
+      </div>
+    </div>
+
+    <label>Produto</label>
+    <input type="text" id="produto" placeholder="BANANA" list="produtosList">
+    <datalist id="produtosList"></datalist>
+
+    <div class="row2">
+      <div>
+        <label>Tipo</label>
+        <select id="tipo">
+          <option value="CX">CX</option>
+          <option value="KG">KG</option>
+        </select>
+      </div>
+      <div>
+        <label>Quantidade</label>
+        <input type="number" id="qtd" inputmode="decimal" step="0.01" placeholder="0">
+      </div>
+    </div>
+
+    <div>
+      <label>V. Unitário</label>
+      <input type="text" id="unit" placeholder="0,00" inputmode="numeric">
+    </div>
+
+    <label>Observações (opcional)</label>
+    <textarea id="obs" rows="2"></textarea>
+
+    <div class="row2" style="margin-top:8px">
+      <button class="btn btn-blue"   id="btnAdd">Nova venda</button>
+      <div class="row2">
+        <button class="btn btn-green"  id="btnPrint">Imprimir</button>
+        <button class="btn btn-orange" id="btnArchive">Arquivar</button>
+      </div>
+    </div>
+
+    <div style="margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button id="btnShowEdit" class="btn btn-ghost">Editar pedido</button>
+      <span style="color:var(--muted);font-size:12px">Abre a lista dos itens para editar</span>
+    </div>
+
+    <div class="preview-title">Pré-visualização (texto 80mm / 42 colunas)</div>
+    <pre id="preview" class="preview"></pre>
+  </div>
+</div>
+
+<!-- MODAL: lista de itens para editar -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <h3 id="editTitle">Itens do pedido</h3>
+    <div id="modalList"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-small" id="closeModal">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Utils */
+const $ = s => document.querySelector(s);
+const money = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pad2 = n => String(n).padStart(2,'0');
+
+let itens = [];
+let editIndex = null;
+
+/* Máscara dinheiro (não limpa) */
+$('#unit').addEventListener('input', (e) => {
+  const onlyDigits = e.target.value.replace(/\D/g, '');
+  if (onlyDigits === '') { e.target.value = ''; return; }
+  const val = (parseInt(onlyDigits, 10) / 100).toFixed(2);
+  e.target.value = val.replace('.', ',');
+  render();
+});
+
+/* Uppercase */
+['cliente','placa','pedra','produto','obs'].forEach(id=>{
+  $('#'+id).addEventListener('input', (e)=>{
+    const pos = e.target.selectionStart;
+    e.target.value = e.target.value.toUpperCase();
+    e.target.setSelectionRange(pos,pos);
+    render();
+  });
+});
+['tipo','qtd','unit'].forEach(id=>$('#'+id).addEventListener('input', render));
+
+function parseNum(str){
+  if (str === '' || str == null) return 0;
+  return parseFloat(String(str).replace('.','').replace(',','.')) || 0;
+}
+
+/* Adiciona / Atualiza */
+function addOrUpdate(){
+  const produto = ($('#produto').value||'').trim();
+  const qtd  = parseNum($('#qtd').value);
+  const unit = parseNum($('#unit').value);
+  const tipo = $('#tipo').value;
+
+  if (!produto || qtd<=0){
+    $('#produto').focus();
+    return;
+  }
+
+  if (editIndex === null){
+    itens.push({ produto, tipo, qtd, unit });
+    // limpa campos do item
+    $('#produto').value=''; $('#qtd').value=''; $('#unit').value=''; $('#tipo').value='CX';
+    $('#produto').focus();
+  } else {
+    // Atualiza SEM limpar (não fica branco)
+    itens[editIndex] = { produto, tipo, qtd, unit };
+    editIndex = null;
+    $('#btnAdd').textContent = 'Nova venda';
+  }
+  render();
+}
+$('#btnAdd').addEventListener('click', addOrUpdate);
+
+/* Modal: abrir/fechar/render */
+function openEditModal(){
+  const modal = $('#editModal');
+  modal.style.display = 'flex';
+  renderModalList();
+}
+function closeEditModal(){
+  $('#editModal').style.display = 'none';
+}
+document.getElementById('btnShowEdit').addEventListener('click', openEditModal);
+document.getElementById('closeModal').addEventListener('click', closeEditModal);
+$('#editModal').addEventListener('click', (e)=>{
+  if (e.target.id === 'editModal') closeEditModal(); // fecha ao tocar fora
+});
+
+function renderModalList(){
+  const box = $('#modalList');
+  box.innerHTML = '';
+  if (!itens.length){
+    box.innerHTML = `<div class="itemRow"><div class="itemInfo">Nenhum item adicionado.</div></div>`;
+    return;
+  }
+  itens.forEach((it,i)=>{
+    const row = document.createElement('div');
+    row.className = 'itemRow';
+
+    const info = document.createElement('div');
+    info.className = 'itemInfo';
+    const subtotal = (Number(it.qtd)||0) * (Number(it.unit)||0);
+    info.innerHTML = `<b>${(it.produto||'').toUpperCase()}</b><br>
+      QTD: ${String(it.qtd).replace('.',',')} ${it.tipo} • V.UNIT: R$ ${money(it.unit)} • TOTAL: R$ ${money(subtotal)}`;
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const bEdit = document.createElement('button');
+    bEdit.className = 'btn btn-green btn-small';
+    bEdit.textContent = 'Editar';
+    bEdit.onclick = ()=> {
+      // carrega nos campos para edição
+      editIndex = i;
+      $('#produto').value = it.produto;
+      $('#tipo').value = it.tipo;
+      $('#qtd').value = String(it.qtd).replace('.',',');
+      $('#unit').value = (Number(it.unit)||0).toFixed(2).replace('.',',');
+      $('#btnAdd').textContent = 'Atualizar item';
+      closeEditModal();
+      $('#produto').focus();
+      render();
+    };
+
+    const bDel = document.createElement('button');
+    bDel.className = 'btn btn-ghost btn-small';
+    bDel.textContent = 'Remover';
+    bDel.onclick = ()=> { itens.splice(i,1); render(); renderModalList(); };
+
+    actions.append(bEdit, bDel);
+    row.append(info, actions);
+    box.appendChild(row);
+  });
+}
+
+/* ---------- Montagem 80mm / 42 colunas ---------- */
+const W = 42;
+const padRight = (s,len)=>{ s=String(s||''); return s.length>len? s.slice(0,len): s + ' '.repeat(len-s.length); };
+const center = (s,len)=>{ s=String(s||''); const L=Math.floor((len-s.length)/2); return ' '.repeat(L)+s+' '.repeat(len-s.length-L); };
+function wrapLines(text, width){
+  if (!text) return [];
+  const words = String(text).split(/\s+/);
+  const lines = []; let line='';
+  words.forEach(w=>{
+    if ((line + (line?' ':'') + w).length <= width) line += (line?' ':'') + w;
+    else { if (line) lines.push(line); while(w.length>width){ lines.push(w.slice(0,width)); w=w.slice(width);} line=w; }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function buildOS(){
+  const d = new Date();
+  const data = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const cliente = ($('#cliente').value||'').toUpperCase();
+  const placa   = ($('#placa').value||'').toUpperCase();
+  const pedra   = ($('#pedra').value||'').toUpperCase();
+  const obs     = ($('#obs').value||'').trim().toUpperCase();
+
+  const out = [];
+  out.push(center('IRMÃOS HARTMANN', W));
+  out.push(center('ORDEM DE SERVIÇO', W));
+  out.push('='.repeat(W));
+  out.push(padRight(`DATA: ${data}`, W));
+  out.push(padRight(`CLIENTE: ${cliente}`, W));
+  out.push(padRight(`PLACA: ${placa}`, W));
+  out.push(padRight(`PEDRA: ${pedra}`, W));
+  out.push('-'.repeat(W));
+  out.push(padRight('PRODUTO:', W));
+  out.push('');
+
+  if (obs){
+    wrapLines('OBS: ' + obs, W).forEach(l => out.push(padRight(l, W)));
+    out.push('');
+  }
+
+  let soma = 0;
+  itens.forEach((it, idx)=>{
+    const subtotal = (Number(it.qtd)||0) * (Number(it.unit)||0);
+    soma += subtotal;
+
+    wrapLines((it.produto||'').toUpperCase(), W).forEach(l => out.push(padRight(l, W)));
+
+    const esquerda = `QTD: ${String(it.qtd).replace('.',',')} ${it.tipo} R$ ${money(it.unit)}`;
+    const direita  = `TOTAL: R$ ${money(subtotal)}`;
+    const espacos  = W - esquerda.length - direita.length;
+    out.push(esquerda + ' '.repeat(espacos > 0 ? espacos : 1) + direita);
+
+    if (idx < itens.length - 1) out.push('');
+  });
+
+  out.push('-'.repeat(W));
+  const totalNota = `TOTAL DA NOTA: R$ ${money(soma)}`;
+  out.push(' '.repeat(Math.max(0, W - totalNota.length)) + totalNota);
+  out.push('');
+  out.push('Assinatura: __________________________');
+
+  return out.join('\n');
+}
+/* ---------------------------------------------- */
+
+function render(){
+  document.getElementById('preview').textContent = buildOS();
+  // se o modal estiver aberto, atualiza a lista
+  if (document.getElementById('editModal').style.display === 'flex') renderModalList();
+}
+
+// Compartilhar (impressão)
+async function shareText(text){
+  if (navigator.share){
+    try { await navigator.share({ text, title:'OS Hartmann' }); }
+    catch(e){ /* cancelado */ }
+  }else{
+    try{ await navigator.clipboard.writeText(text); alert('OS copiada! Abra o app da impressora e cole.'); }
+    catch(e){ alert('Selecione e copie manualmente da prévia.'); }
+  }
+}
+function garantirItemAtual(){
+  const tem = ($('#produto').value||'').trim() || $('#qtd').value || $('#unit').value;
+  if (tem){ addOrUpdate(); }
+}
+document.getElementById('btnPrint').addEventListener('click', async ()=>{
+  garantirItemAtual();
+  await shareText(buildOS());
+});
+document.getElementById('btnArchive').addEventListener('click', ()=>{
+  garantirItemAtual();
+  const pacote = {
+    createdAt: Date.now(),
+    cliente: ($('#cliente').value||'').trim(),
+    placa: ($('#placa').value||'').trim(),
+    pedra: ($('#pedra').value||'').trim(),
+    obs: ($('#obs').value||'').trim(),
+    itens: itens.slice(),
+    texto: buildOS()
+  };
+  const list = JSON.parse(localStorage.getItem('os_arquivadas')||'[]');
+  list.push(pacote);
+  localStorage.setItem('os_arquivadas', JSON.stringify(list));
+  alert('OS arquivada!');
+});
+
+// Autocomplete de produtos
+function carregarProdutosDatalist(){
+  const dl = document.getElementById('produtosList');
+  if (!dl) return;
+  dl.innerHTML = '';
+  let lista = [];
+  try { lista = JSON.parse(localStorage.getItem('produtos') || '[]'); } catch(e){ lista = []; }
+  lista = (lista || []).map(x => String(x||'').toUpperCase())
+                       .filter(x => x.trim() !== '')
+                       .sort((a,b)=> a.localeCompare(b, 'pt-BR'));
+  for (const nome of lista) {
+    const opt = document.createElement('option');
+    opt.value = nome;
+    dl.appendChild(opt);
+  }
+}
+window.addEventListener('load', carregarProdutosDatalist);
+
+// PWA: registrar SW e instalar
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(console.error);
+}
+</script>
+
+<script src="install.js"></script>
+</body>
+</html>

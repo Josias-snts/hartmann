@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Produtos — Irmãos Hartmann</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
+    --border:#2c3448; --green:#10f7a0; --blue:#0ea5e9; --danger:#ef4444;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:20px}
+  .card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+  h1{margin:0 0 12px;font-size:20px}
+  label{font-size:14px;color:var(--muted);display:block;margin-bottom:6px}
+  input{
+    width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);
+    background:#0b1220;color:var(--text);margin-bottom:12px;text-transform:uppercase;
+  }
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;height:44px;border-radius:10px;
+    font-weight:800;font-size:15px;border:0;cursor:pointer;user-select:none;padding:0 14px
+  }
+  .btn-blue{background:var(--blue);color:#001018}
+  .btn-green{background:var(--green);color:#001c14}
+  .btn-ghost{background:transparent;border:2px solid var(--border);color:var(--text)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .muted{color:var(--muted);font-size:12px;margin:6px 0 12px}
+  ul{list-style:none;padding:0;margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  li{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 12px;border-top:1px solid var(--border);gap:10px
+  }
+  li:first-child{border-top:0}
+  .name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .actions{display:flex;gap:8px}
+  .actions .btn{height:34px;font-size:13px;padding:0 10px}
+  .empty{color:var(--muted);text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Produtos</h1>
+
+    <label for="produto">Nome do produto</label>
+    <input type="text" id="produto" placeholder="NOME DO PRODUTO">
+
+    <div class="toolbar">
+      <button class="btn btn-blue"  id="novo">Novo Produto</button>
+      <button class="btn btn-green" id="salvar">Salvar</button>
+      <button class="btn btn-ghost" id="cancelar" style="display:none">Cancelar</button>
+      <a class="btn btn-ghost" href="menu.html">Voltar ao Menu</a>
+    </div>
+
+    <div class="muted">Toque em um item para editar. Tudo fica em MAIÚSCULAS e em ordem alfabética.</div>
+    <ul id="lista"></ul>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let produtos = JSON.parse(localStorage.getItem("produtos") || "[]");
+let editIndex = null; // null = adicionando; número = editando
+
+// Carga inicial se estiver vazio (sua lista)
+if (produtos.length === 0) {
+  produtos = [
+    "ALHO",
+    "AIPIM",
+    "AIPIM DESCASCADO",
+    "ABACATE",
+    "ABACAXI",
+    "BATATA DOCE ROSA",
+    "BATATA DOCE BRANCA",
+    "BERGAMOTA JAPONESA",
+    "BERGAMOTA MORGOT",
+    "BERGAMOTA CAI",
+    "BERGAMOTA DECOPON",
+    "BERGAMOTA PARECI",
+    "BERGAMOTA MONTENEGRINA",
+    "LARANJA SUCO",
+    "LARANJA CEU",
+    "LARANJA UMBIGO",
+    "LIMAO",
+    "MELANCIA",
+    "MELAO ESPANHOL",
+    "MANGA TOMY",
+    "MANGA PALMER",
+    "MORANGA",
+    "PITAYA",
+    "MELANCIA AMARELA",
+    "MELANCIA PINGO DOCE"
+  ];
+  salvarLista();
+} else {
+  ordenar();
+  render();
+}
+
+function ordenar(){
+  produtos = (produtos || []).map(p => String(p||'').toUpperCase().trim())
+                             .filter(p => p !== '')
+                             .sort((a,b)=> a.localeCompare(b,'pt-BR'));
+}
+
+function salvarLista(){
+  ordenar();
+  localStorage.setItem("produtos", JSON.stringify(produtos));
+  render();
+}
+
+function render(){
+  const lista = $("#lista");
+  lista.innerHTML = "";
+  if (!produtos || produtos.length === 0) {
+    lista.innerHTML = `<li class="empty">Nenhum produto cadastrado.</li>`;
+    return;
+  }
+  produtos.forEach((p, idx) => {
+    const li = document.createElement("li");
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = p;
+    name.title = p;
+    name.onclick = () => iniciarEdicao(idx);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const btnEdit = document.createElement("button");
+    btnEdit.className = "btn btn-ghost";
+    btnEdit.textContent = "Editar";
+    btnEdit.onclick = () => iniciarEdicao(idx);
+
+    const btnDel = document.createElement("button");
+    btnDel.className = "btn btn-danger";
+    btnDel.textContent = "Excluir";
+    btnDel.onclick = () => excluir(idx);
+
+    actions.append(btnEdit, btnDel);
+    li.append(name, actions);
+    lista.appendChild(li);
+  });
+
+  // estado da toolbar
+  if (editIndex === null) {
+    $("#salvar").textContent = "Salvar";
+    $("#cancelar").style.display = "none";
+  } else {
+    $("#salvar").textContent = "Atualizar";
+    $("#cancelar").style.display = "";
+  }
+}
+
+function iniciarEdicao(idx){
+  editIndex = idx;
+  $("#produto").value = produtos[idx];
+  $("#produto").focus();
+  render();
+}
+
+function excluir(idx){
+  const nome = produtos[idx];
+  if (!confirm(`Excluir o produto:\n${nome}?`)) return;
+  produtos.splice(idx,1);
+  if (editIndex === idx) limparEdicao();
+  salvarLista();
+}
+
+function limparEdicao(){
+  editIndex = null;
+  $("#produto").value = "";
+  render();
+}
+
+$("#novo").onclick = () => {
+  limparEdicao();
+  $("#produto").focus();
+};
+
+$("#cancelar").onclick = () => {
+  limparEdicao();
+};
+
+$("#salvar").onclick = () => {
+  let nome = $("#produto").value.trim().toUpperCase();
+  if (!nome) { alert("Informe o nome do produto."); return; }
+
+  // evita duplicados (desconsidera o item sendo editado)
+  const existe = produtos.some((p, i) => p === nome && i !== editIndex);
+  if (existe) { alert("Produto já existe!"); return; }
+
+  if (editIndex === null) {
+    produtos.push(nome);
+  } else {
+    produtos[editIndex] = nome;
+  }
+  limparEdicao();
+  salvarLista();
+};
+
+// Enter para salvar/atualizar
+$("#produto").addEventListener("keydown", e => {
+  if (e.key === "Enter") $("#salvar").click();
+});
+</script>
+</body>
+</html>

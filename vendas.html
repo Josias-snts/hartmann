@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Vender — Irmãos Hartmann</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
+    --border:#2c3448; --green:#10f7a0; --orange:#f59e0b; --blue:#0ea5e9;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:20px}
+  .topbar{display:flex;justify-content:flex-end;margin-bottom:6px}
+  .link-top{font-size:14px;color:#9bd3ff;text-decoration:none;padding:6px 10px;border-radius:10px;border:1px solid var(--border)}
+  .card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+  label{font-size:14px;color:var(--muted);margin-top:10px;display:block}
+  input,select,textarea{
+    width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);
+    background:#0b1220;color:var(--text);margin-top:5px;margin-bottom:10px;text-transform:uppercase;
+  }
+  input[type="number"]{text-transform:none;} /* números não recebem uppercase */
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;height:56px;border-radius:14px;
+    font-weight:800;font-size:18px;border:0;cursor:pointer;user-select:none
+  }
+  .btn-green{background:var(--green);color:#001c14}
+  .btn-orange{background:var(--orange);color:#1f1300}
+  .btn-blue{background:var(--blue);color:#001018}
+  .btn-outline{background:transparent;color:var(--text);border:2px solid var(--border)}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
+  .preview-title{color:var(--muted);font-size:12px;margin-top:10px;text-align:left;}
+  .preview{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap; word-break: break-word; line-height: 1.2;
+    margin: 8px 0 0; color: var(--text); width: 100%; background: transparent; padding: 0; border: 0;
+  }
+
+  /* Modal editar itens */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:none; align-items:center; justify-content:center; padding:20px; z-index:20;
+  }
+  .modal{background:var(--card); border-radius:16px; max-width:720px; width:100%; max-height:92vh; overflow:auto; padding:16px; box-shadow:0 20px 60px rgba(0,0,0,.65);}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .modal-title{font-weight:800; font-size:18px}
+  .x{background:transparent; border:1px solid var(--border); color:var(--text); border-radius:10px; height:36px; padding:0 10px; cursor:pointer}
+  .muted{color:var(--muted); font-size:12px}
+  .itens-list{display:flex; flex-direction:column; gap:10px; margin-top:8px}
+  .item-card{border:1px solid var(--border); border-radius:12px; padding:10px}
+  .item-head{display:flex; justify-content:space-between; gap:10px; align-items:center}
+  .small-btns{display:flex; gap:8px}
+  .small-btn{height:36px; padding:0 12px; border-radius:10px; font-weight:800; border:0; cursor:pointer}
+  .small-green{background:var(--green); color:#001c14}
+  .small-outline{background:transparent; color:var(--text); border:2px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="link-top" href="menu.html">Voltar ao menu</a>
+  </div>
+
+  <div class="card">
+    <!-- Cliente -->
+    <label>Cliente</label>
+    <input type="text" id="cliente" placeholder="NOME DO CLIENTE">
+
+    <!-- Placa e Pedra -->
+    <div class="row2">
+      <div>
+        <label>Placa</label>
+        <input type="text" id="placa" placeholder="ABC1D23">
+      </div>
+      <div>
+        <label>Pedra</label>
+        <input type="number" id="pedra" placeholder="07" inputmode="numeric">
+      </div>
+    </div>
+
+    <!-- Produto -->
+    <label>Produto</label>
+    <input type="text" id="produto" placeholder="BANANA" list="produtosList" autocomplete="off">
+    <datalist id="produtosList"></datalist>
+
+    <div class="row2">
+      <div>
+        <label>Tipo</label>
+        <select id="tipo">
+          <option value="CX">CX</option>
+          <option value="KG">KG</option>
+          <option value="UN">UN</option><!-- ADICIONADO -->
+        </select>
+      </div>
+      <div>
+        <label>Quantidade</label>
+        <input type="number" id="qtd" inputmode="decimal" step="0.01" placeholder="0">
+      </div>
+    </div>
+
+    <div>
+      <label>V. Unitário</label>
+      <input type="text" id="unit" placeholder="0,00" inputmode="numeric">
+    </div>
+
+    <label>Observações (opcional)</label>
+    <textarea id="obs" rows="2"></textarea>
+
+    <!-- Botões -->
+    <div class="row3">
+      <button class="btn btn-blue"   id="btnAdd">Nova venda</button>
+      <button class="btn btn-green"  id="btnPrint">Imprimir</button>
+      <button class="btn btn-orange" id="btnArchive">Arquivar</button>
+    </div>
+
+    <div class="row3" style="margin-top:10px">
+      <button class="btn btn-outline" id="btnEdit">Editar pedido</button>
+      <div></div><div></div>
+    </div>
+
+    <!-- Prévia (texto cru, 42 colunas) -->
+    <div class="preview-title">Pré-visualização (texto 80mm / 42 colunas)</div>
+    <pre id="preview" class="preview"></pre>
+  </div>
+</div>
+
+<!-- Modal: editar itens já adicionados -->
+<div id="backdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Itens adicionados</div>
+      <button class="x" id="fecharModal">Fechar</button>
+    </div>
+    <div class="muted">Toque em <b>Editar</b> para carregar o item no formulário e ajustar. Toque em <b>Remover</b> para excluir da OS.</div>
+    <div id="itensList" class="itens-list"></div>
+  </div>
+</div>
+
+<script>
+/* ======================== Utilidades ======================== */
+const $ = s => document.querySelector(s);
+const money = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pad2 = n => String(n).padStart(2,'0');
+
+let itens = [];          // itens adicionados na OS
+let editIndex = null;    // quando clicar em Editar item
+
+/* --- máscara 0,00 no V. Unitário --- */
+$('#unit').addEventListener('input', e => {
+  let val = e.target.value.replace(/\D/g, '');
+  val = (parseInt(val || '0', 10) / 100).toFixed(2);
+  e.target.value = val.replace('.', ',');
+  render();
+});
+
+/* --- uppercase em campos de texto --- */
+['cliente','placa','produto','obs'].forEach(id=>{
+  $('#'+id).addEventListener('input', e=>{
+    const pos = e.target.selectionStart;
+    e.target.value = e.target.value.toUpperCase();
+    e.target.setSelectionRange(pos,pos);
+    render();
+  });
+});
+['tipo','qtd','unit','pedra'].forEach(id=>$('#'+id).addEventListener('input', render));
+
+function parseNum(str){
+  if (str === '' || str === null || str === undefined) return 0;
+  return parseFloat(String(str).replace('.','').replace(',','.')) || 0;
+}
+
+/* =================== Produtos (datalist) ==================== */
+function lerProdutosDoStorage() {
+  let arr;
+  try { arr = JSON.parse(localStorage.getItem('produtos') || '[]'); } catch { arr = []; }
+  // Aceita ["BANANA"] ou [{nome:"BANANA"}, ...]
+  if (Array.isArray(arr) && arr.length && typeof arr[0] === 'object' && arr[0] !== null) {
+    if ('nome' in arr[0]) arr = arr.map(x => x.nome);
+  }
+  arr = [...new Set(
+    (arr || []).map(x => String(x || '').toUpperCase().trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  return arr;
+}
+function preencherDatalistProdutos() {
+  const dl = document.getElementById('produtosList');
+  if (!dl) return;
+  dl.innerHTML = '';
+  for (const nome of lerProdutosDoStorage()) {
+    const opt = document.createElement('option');
+    opt.value = nome;
+    dl.appendChild(opt);
+  }
+}
+document.addEventListener('DOMContentLoaded', preencherDatalistProdutos);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) preencherDatalistProdutos(); });
+window.addEventListener('storage', (e) => { if (e.key === 'produtos') preencherDatalistProdutos(); });
+document.getElementById('produto')?.addEventListener('focus', preencherDatalistProdutos);
+
+// Sementes automáticas se estiver vazio (pode remover se quiser)
+(function sementesSeVazio(){
+  const existe = localStorage.getItem('produtos');
+  if (!existe) {
+    const seeds = [
+      "ALHO","AIPIM","AIPIM DESCASCADO","ABACATE","ABACAXI","BATATA DOCE ROSA","BATATA DOCE BRANCA",
+      "BERGAMOTA JAPONESA","BERGAMOTA MORGOT","BERGAMOTA CAI","BERGAMOTA DECOPON",
+      "BERGAMOTA PARECI","BERGAMOTA MONTENEGRINA","LARANJA SUCO","LARANJA CÉU",
+      "LARANJA UMBIGO","LIMÃO","MELANCIA","MELÃO ESPANHOL","MANGA TOMY","MANGA PALMER",
+      "MORANGA","PITAYA","MELANCIA AMARELA","MELANCIA PINGO DOCE"
+    ];
+    localStorage.setItem('produtos', JSON.stringify(seeds));
+  }
+})();
+
+/* =================== Adicionar item =================== */
+function addAtualSePreenchido(){
+  const produto = ($('#produto').value||'').trim();
+  const qtd  = parseNum($('#qtd').value);
+  const unit = parseNum($('#unit').value);
+  const tipo = $('#tipo').value;
+  if (!produto || qtd<=0) return false;
+
+  if (editIndex === null) {
+    itens.push({ produto: produto.toUpperCase(), tipo, qtd, unit });
+  } else {
+    itens[editIndex] = { produto: produto.toUpperCase(), tipo, qtd, unit };
+    editIndex = null;
+  }
+
+  // limpa campos do item, mantém cabeçalho
+  $('#produto').value=''; $('#qtd').value=''; $('#unit').value=''; $('#tipo').value='CX';
+  $('#produto').focus();
+  render();
+  return true;
+}
+
+function garantirItemAtual(){
+  const tem = ($('#produto').value||'').trim() || $('#qtd').value || $('#unit').value;
+  if (tem) addAtualSePreenchido();
+}
+
+/* ================== Prévia estilo 80mm ================== */
+const W = 42;
+const padRight = (s,len)=>{ s=String(s||''); return s.length>len? s.slice(0,len): s + ' '.repeat(len-s.length); };
+const center = (s,len)=>{ s=String(s||''); const L=Math.floor((len-s.length)/2); return ' '.repeat(L)+s+' '.repeat(len-s.length-L); };
+function wrapLines(text, width){
+  if (!text) return [];
+  const words = String(text).split(/\s+/);
+  const lines = []; let line='';
+  words.forEach(w=>{
+    if ((line + (line?' ':'') + w).length <= width) line += (line?' ':'') + w;
+    else { if (line) lines.push(line); while(w.length>width){ lines.push(w.slice(0,width)); w=w.slice(width);} line=w; }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function buildOS(){
+  const d = new Date();
+  const data = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+  const cliente = ($('#cliente').value||'').toUpperCase();
+  const placa   = ($('#placa').value||'').toUpperCase();
+  const pedra   = ($('#pedra').value||'').toUpperCase();
+  const obs     = ($('#obs').value||'').trim().toUpperCase();
+
+  const out = [];
+  out.push(center('IRMAOS HARTMANN', W));
+  out.push(center('ORDEM DE SERVICO', W));
+  out.push('='.repeat(W));
+  out.push(padRight(`DATA: ${data}`, W));
+  out.push(padRight(`CLIENTE: ${cliente}`, W));
+  out.push(padRight(`PLACA: ${placa}`, W));
+  out.push(padRight(`PEDRA: ${pedra}`, W));
+  out.push('-'.repeat(W));
+  out.push(padRight('PRODUTO:', W));
+  out.push('');
+
+  if (obs){
+    wrapLines('OBS: ' + obs, W).forEach(l => out.push(padRight(l, W)));
+    out.push('');
+  }
+
+  let soma = 0;
+  itens.forEach((it, idx)=>{
+    const subtotal = it.qtd * it.unit;
+    soma += subtotal;
+
+    // Nome do produto
+    wrapLines((it.produto||'').toUpperCase(), W).forEach(l => out.push(padRight(l, W)));
+
+    // Linha com TOTAL alinhado à direita
+    const esquerda = `QTD: ${String(it.qtd).replace('.',',')} ${it.tipo} R$ ${money(it.unit)}`;
+    const direita  = `TOTAL: R$ ${money(subtotal)}`;
+    const espacos  = W - esquerda.length - direita.length;
+    out.push(esquerda + ' '.repeat(espacos > 0 ? espacos : 1) + direita);
+
+    if (idx < itens.length - 1) out.push(''); // espaço entre produtos
+  });
+
+  out.push('-'.repeat(W));
+  const totalNota = `TOTAL DA NOTA: R$ ${money(soma)}`;
+  out.push(' '.repeat(Math.max(0, W - totalNota.length)) + totalNota);
+  out.push('');
+  out.push('Assinatura: __________________________');
+
+  return out.join('\n');
+}
+
+function render(){ $('#preview').textContent = buildOS(); }
+
+/* =================== Ações principais =================== */
+$('#btnAdd').addEventListener('click', ()=>{
+  if(!addAtualSePreenchido()) alert('Preencha PRODUTO e QTD para adicionar.');
+});
+
+async function shareText(text){
+  if (navigator.share){
+    try { await navigator.share({ text, title:'OS Hartmann' }); }
+    catch(e){ /* cancelado */ }
+  }else{
+    try{ await navigator.clipboard.writeText(text); alert('OS copiada! Abra o app da impressora e cole.'); }
+    catch(e){ alert('Selecione e copie manualmente da prévia.'); }
+  }
+}
+
+$('#btnPrint').addEventListener('click', async ()=>{
+  garantirItemAtual();
+  await shareText(buildOS());
+});
+
+$('#btnArchive').addEventListener('click', ()=>{
+  garantirItemAtual();
+  const pacote = {
+    createdAt: Date.now(),
+    cliente: ($('#cliente').value||'').trim(),
+    placa: ($('#placa').value||'').trim(),
+    pedra: ($('#pedra').value||'').trim(),
+    obs: ($('#obs').value||'').trim(),
+    itens: itens.slice(),
+    texto: buildOS()
+  };
+  const list = JSON.parse(localStorage.getItem('os_arquivadas')||'[]');
+  list.push(pacote);
+  localStorage.setItem('os_arquivadas', JSON.stringify(list));
+  alert('OS arquivada!');
+});
+
+/* =================== Modal: editar itens =================== */
+function abrirModalItens(){
+  const box = $('#itensList');
+  box.innerHTML = '';
+  if (!itens.length){
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    div.textContent = 'Nenhum item adicionado ainda.';
+    box.appendChild(div);
+  } else {
+    itens.forEach((it, i)=>{
+      const card = document.createElement('div');
+      card.className = 'item-card';
+
+      const head = document.createElement('div');
+      head.className = 'item-head';
+
+      const titulo = document.createElement('div');
+      titulo.innerHTML = `<b>${(it.produto||'').toUpperCase()}</b><br><span class="muted">QTD: ${String(it.qtd).replace('.',',')} ${it.tipo} — V.UNIT: R$ ${money(it.unit)}</span>`;
+      head.appendChild(titulo);
+
+      const btns = document.createElement('div');
+      btns.className = 'small-btns';
+
+      const bEdit = document.createElement('button');
+      bEdit.className = 'small-btn small-green';
+      bEdit.textContent = 'Editar';
+      bEdit.onclick = ()=>{
+        // carrega no formulário principal para editar
+        $('#produto').value = (it.produto||'').toUpperCase();
+        $('#tipo').value    = it.tipo;
+        $('#qtd').value     = it.qtd;
+        $('#unit').value    = (parseFloat(it.unit)||0).toFixed(2).replace('.',',');
+        editIndex = i; // próxima "Nova venda" irá salvar por cima deste item
+        $('#backdrop').style.display = 'none';
+        $('#produto').focus();
+      };
+      btns.appendChild(bEdit);
+
+      const bRem = document.createElement('button');
+      bRem.className = 'small-btn small-outline';
+      bRem.textContent = 'Remover';
+      bRem.onclick = ()=>{
+        itens.splice(i,1);
+        abrirModalItens(); // recarrega lista
+        render();
+      };
+      btns.appendChild(bRem);
+
+      head.appendChild(btns);
+      card.appendChild(head);
+      box.appendChild(card);
+    });
+  }
+  $('#backdrop').style.display = 'flex';
+}
+$('#btnEdit').addEventListener('click', abrirModalItens);
+$('#fecharModal').addEventListener('click', ()=> $('#backdrop').style.display='none');
+
+/* =================== Inicial =================== */
+render();
+</script>
+</body>
+</html>

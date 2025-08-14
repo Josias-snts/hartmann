@@ -7,34 +7,248 @@
 <style>
   :root{
     --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
-    --border:#2c3448; --green:#10f7a0; --orange:#f59e0b; --blue:#0ea5e9;
+    --border:#2c3448; --green:#10f7a0; --orange:#f87171; --blue:#0ea5e9;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
-  .wrap{max-width:760px;margin:0 auto;padding:20px}
-  .topbar{display:flex;justify-content:flex-end;margin-bottom:8px}
+  .wrap{max-width:860px;margin:0 auto;padding:18px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  h1{font-size:24px;margin:0}
   .link-top{font-size:14px;color:#9bd3ff;text-decoration:none;padding:6px 10px;border-radius:10px;border:1px solid var(--border)}
-  .title{font-weight:800;font-size:20px;margin:6px 0 14px}
-  .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 16px 40px rgba(0,0,0,.45);margin-bottom:16px}
-  .rowBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-  .btn{
-    display:flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;
-    font-weight:800;font-size:16px;border:0;cursor:pointer;user-select:none
-  }
-  .btn-green{background:var(--green);color:#001c14}
-  .btn-blue{background:var(--blue);color:#001018}
-  .btn-orange{background:var(--orange);color:#1f1300}
-  .btn-outline{background:transparent;color:var(--text);border:2px solid var(--border)}
-  .muted{color:var(--muted);font-size:12px;margin:8px 0 6px}
-  .preview{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    white-space: pre-wrap; word-break: break-word; line-height: 1.2;
-    margin: 6px 0 0; color: var(--text); width: 100%; background: transparent; padding: 0; border: 0;
-  }
-  .empty{color:var(--muted);text-align:center;border:1px dashed var(--border);padding:20px;border-radius:12px}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;cursor:pointer}
+  .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .muted{color:var(--muted)}
+  .total{font-weight:800}
 
   /* Modal */
-  .modal-backdrop{
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+  .modal{background:var(--card);border-radius:16px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:16px;border:1px solid var(--border)}
+  .modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .btn{height:44px;padding:0 14px;border-radius:12px;border:0;font-weight:800;cursor:pointer}
+  .btn-blue{background:var(--blue);color:#001018}
+  .btn-green{background:var(--green);color:#001c14}
+  .btn-outline{background:transparent;color:var(--text);border:2px solid var(--border)}
+  .btn-red{background:var(--orange);color:#220a0a}
+  .preview-title{color:var(--muted);font-size:12px;margin:8px 0 4px}
+  pre.preview{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space:pre-wrap; word-break:break-word; line-height:1.2; margin:0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>OS Arquivadas</h1>
+    <a class="link-top" href="menu.html">Voltar ao menu</a>
+  </div>
+
+  <div id="lista" class="list"></div>
+</div>
+
+<!-- Modal Detalhes -->
+<div id="backdrop" class="backdrop">
+  <div class="modal">
+    <div class="modalhead">
+      <div style="font-weight:800">Detalhes da OS</div>
+      <button class="btn btn-outline" id="fechar">Fechar</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-blue"  id="btnReprint">Reimprimir</button>
+      <button class="btn btn-green" id="btnDuplicate">Duplicar p/ Vendas</button>
+      <button class="btn btn-outline" id="btnEdit">Editar</button>
+      <button class="btn btn-red"    id="btnDelete">Excluir</button>
+    </div>
+
+    <div class="preview-title">Pré-visualização (texto 80mm / 42 colunas)</div>
+    <pre id="preview" class="preview"></pre>
+  </div>
+</div>
+
+<script>
+/* ========= helpers de formatação (mesmos de vendas) ========= */
+const W = 42;
+const money = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pad2 = n => String(n).padStart(2,'0');
+const padRight = (s,len)=>{ s=String(s||''); return s.length>len? s.slice(0,len): s + ' '.repeat(len-s.length); };
+const center = (s,len)=>{ s=String(s||''); const L=Math.floor((len-s.length)/2); return ' '.repeat(L)+s+' '.repeat(len-s.length-L); };
+function wrapLines(text, width){
+  if (!text) return [];
+  const words = String(text).split(/\s+/);
+  const out = []; let line='';
+  for (let w of words){
+    if ((line + (line?' ':'') + w).length <= width) line += (line?' ':'') + w;
+    else { if (line) out.push(line); while(w.length>width){ out.push(w.slice(0,width)); w=w.slice(width); } line=w; }
+  }
+  if (line) out.push(line);
+  return out;
+}
+
+/* ------- gera a OS igual a vendas, a partir do registro salvo ------- */
+function buildOSFromRecord(rec){
+  const d = new Date(rec.createdAt || Date.now());
+  const data = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+  const cliente = (rec.cliente||'').toUpperCase();
+  const placa   = (rec.placa||'').toUpperCase();
+  const pedra   = (rec.pedra||'').toUpperCase();
+  const obs     = (rec.obs||'').toUpperCase();
+  const itens   = Array.isArray(rec.itens)? rec.itens : [];
+
+  const out = [];
+  out.push(center('IRMÃOS HARTMANN', W));
+  out.push(center('ORDEM DE SERVIÇO', W));
+  out.push('='.repeat(W));
+  out.push(padRight(`DATA: ${data}`, W));
+  out.push(padRight(`CLIENTE: ${cliente}`, W));
+  out.push(padRight(`PLACA: ${placa}`, W));
+  out.push(padRight(`PEDRA: ${pedra}`, W));
+  out.push('-'.repeat(W));
+  out.push(padRight('PRODUTO:', W));
+  out.push('');
+
+  if (obs){
+    wrapLines('OBS: ' + obs, W).forEach(l => out.push(padRight(l,W)));
+    out.push('');
+  }
+
+  let soma = 0;
+  itens.forEach((it, idx)=>{
+    const nome = (it.produto||'').toUpperCase();
+    const tipo = it.tipo || 'CX';
+    const qtd  = typeof it.qtd === 'number' ? it.qtd : parseFloat(it.qtd || 0);
+    const unit = typeof it.unit === 'number'? it.unit: parseFloat(String(it.unit||'0').replace(',','.'));
+    const subtotal = (qtd||0) * (unit||0);
+    soma += subtotal;
+
+    wrapLines(nome, W).forEach(l => out.push(padRight(l, W)));
+
+    const esquerda = `QTD: ${String(qtd).replace('.',',')} ${tipo} R$ ${money(unit)}`;
+    const direita  = `TOTAL: R$ ${money(subtotal)}`;
+    const espacos  = W - esquerda.length - direita.length;
+    out.push(esquerda + ' '.repeat(espacos>0?espacos:1) + direita);
+
+    if (idx < itens.length-1) out.push('');
+  });
+
+  out.push('-'.repeat(W));
+  const totalNota = `TOTAL DA NOTA: R$ ${money(soma)}`;
+  out.push(' '.repeat(Math.max(0, W - totalNota.length)) + totalNota);
+  out.push('');
+  out.push('Assinatura: __________________________');
+
+  return out.join('\n');
+}
+
+/* ================== carregar e listar ================== */
+const listaEl = document.getElementById('lista');
+let data = [];
+
+function load(){
+  try{ data = JSON.parse(localStorage.getItem('os_arquivadas')||'[]'); }
+  catch{ data = []; }
+  renderList();
+}
+
+function renderList(){
+  listaEl.innerHTML = '';
+  if (!data.length){
+    const empty = document.createElement('div');
+    empty.className='card';
+    empty.textContent='Nenhuma OS arquivada ainda.';
+    listaEl.appendChild(empty);
+    return;
+  }
+
+  data
+    .map((rec, idx)=>({ rec, idx }))
+    .sort((a,b)=> (b.rec.createdAt||0) - (a.rec.createdAt||0))
+    .forEach(({rec, idx})=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      const total = Array.isArray(rec.itens) ? rec.itens.reduce((s,i)=> s + ( (parseFloat(i.qtd)||0) * (parseFloat(String(i.unit||'0').replace(',','.'))||0) ),0) : 0;
+
+      card.innerHTML = `
+        <div class="row">
+          <div>
+            <div style="font-weight:800">${(rec.cliente||'').toUpperCase()}</div>
+            <div class="muted">${new Date(rec.createdAt||Date.now()).toLocaleString('pt-BR')}</div>
+          </div>
+          <div class="total">TOTAL: R$ ${money(total)}</div>
+        </div>
+      `;
+      card.onclick = ()=> openModal(idx);
+      listaEl.appendChild(card);
+    });
+}
+
+/* ================== modal detalhes ================== */
+const backdrop = document.getElementById('backdrop');
+const preview  = document.getElementById('preview');
+let currentIndex = -1;
+
+function openModal(i){
+  currentIndex = i;
+  const rec = data[i];
+  // gera a mesma OS de vendas:
+  preview.textContent = buildOSFromRecord(rec);
+  backdrop.style.display = 'flex';
+}
+
+document.getElementById('fechar').onclick = ()=> backdrop.style.display='none';
+
+document.getElementById('btnReprint').onclick = async ()=>{
+  if (currentIndex<0) return;
+  const txt = buildOSFromRecord(data[currentIndex]);
+  if (navigator.share){
+    try{ await navigator.share({ text: txt, title:'OS Hartmann' }); }catch{}
+  }else{
+    try{ await navigator.clipboard.writeText(txt); alert('OS copiada! Abra o app da impressora e cole.'); }
+    catch{ alert('Selecione e copie manualmente da prévia.'); }
+  }
+};
+
+document.getElementById('btnDuplicate').onclick = ()=>{
+  if (currentIndex<0) return;
+  localStorage.setItem('draft_venda', JSON.stringify(data[currentIndex]));
+  location.href = 'vendas.html';
+};
+
+document.getElementById('btnEdit').onclick = ()=>{
+  if (currentIndex<0) return;
+  // usa o mesmo fluxo de duplicar; em vendas você edita e reimprime
+  localStorage.setItem('draft_venda', JSON.stringify(data[currentIndex]));
+  location.href = 'vendas.html';
+};
+
+document.getElementById('btnDelete').onclick = ()=>{
+  if (currentIndex<0) return;
+  if (!confirm('Excluir esta OS arquivada?')) return;
+  data.splice(currentIndex,1);
+  localStorage.setItem('os_arquivadas', JSON.stringify(data));
+  backdrop.style.display = 'none';
+  renderList();
+};
+
+load();
+
+/* ========= opcional: vendas.html pode ler esse rascunho =========
+No início do vendas.html, você pode adicionar:
+
+(() => {
+  const raw = localStorage.getItem('draft_venda');
+  if (!raw) return;
+  const d = JSON.parse(raw);
+  // preencher campos e itens...
+  // depois: localStorage.removeItem('draft_venda');
+})();
+=============================================================== */
+</script>
+</body>
+</html>  .modal-backdrop{
     position:fixed; inset:0; background:rgba(0,0,0,.45);
     display:none; align-items:center; justify-content:center; padding:20px; z-index:20;
   }
@@ -408,3 +622,4 @@
 </script>
 </body>
 </html>
+

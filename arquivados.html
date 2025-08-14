@@ -1,40 +1,144 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>OS Arquivadas — Irmãos Hartmann</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS Arquivadas</title>
 <style>
-  :root{
-    --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
-    --border:#2c3448; --green:#10f7a0; --orange:#f87171; --blue:#0ea5e9;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
-  .wrap{max-width:860px;margin:0 auto;padding:18px}
-  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-  h1{font-size:24px;margin:0}
-  .link-top{font-size:14px;color:#9bd3ff;text-decoration:none;padding:6px 10px;border-radius:10px;border:1px solid var(--border)}
-  .list{display:flex;flex-direction:column;gap:10px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;cursor:pointer}
-  .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
-  .muted{color:var(--muted)}
-  .total{font-weight:800}
+body { font-family: Arial, sans-serif; background: #0d1117; color: white; margin: 0; padding: 0; }
+header { background: #161b22; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+button { padding: 5px 10px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+.os-card { background: #161b22; padding: 10px; margin: 10px; border-radius: 5px; cursor: pointer; }
+.backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+.modal { background: #161b22; padding: 20px; border-radius: 10px; max-width: 400px; width: 90%; }
+.preview { background: black; color: white; font-family: monospace; font-size: 14px; padding: 10px; margin-top: 10px; white-space: pre; overflow-x: auto; }
+.btn-green { background: #00ff80; }
+.btn-blue { background: #00aaff; color: white; }
+.btn-red { background: red; color: white; }
+</style>
+</head>
+<body>
 
-  /* Modal */
-  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
-  .modal{background:var(--card);border-radius:16px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:16px;border:1px solid var(--border)}
-  .modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-  .btn{height:44px;padding:0 14px;border-radius:12px;border:0;font-weight:800;cursor:pointer}
-  .btn-blue{background:var(--blue);color:#001018}
-  .btn-green{background:var(--green);color:#001c14}
-  .btn-outline{background:transparent;color:var(--text);border:2px solid var(--border)}
-  .btn-red{background:var(--orange);color:#220a0a}
-  .preview-title{color:var(--muted);font-size:12px;margin:8px 0 4px}
-  pre.preview{
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    white-space:pre-wrap; word-break:break-word; line-height:1.2; margin:0;
+<header>
+<h2>OS Arquivadas</h2>
+<button onclick="location.href='index.html'">Voltar ao menu</button>
+</header>
+
+<div id="list"></div>
+
+<div class="backdrop" id="backdrop">
+<div class="modal">
+<h3>Detalhes da OS</h3>
+<button class="btn-green" id="btnReprint">Reimprimir</button>
+<button class="btn-blue" id="btnDuplicate">Duplicar p/ Vendas</button>
+<button id="btnEdit">Editar</button>
+<button class="btn-red" id="btnDelete">Excluir</button>
+<button onclick="backdrop.style.display='none'">Fechar</button>
+<div class="preview" id="preview"></div>
+</div>
+</div>
+
+<script>
+let data = [];
+let currentIndex = -1;
+
+function buildOSFromRecord(rec){
+  let header = "         IRMÃOS HARTMANN\n           ORDEM DE SERVIÇO\n";
+  header += "==========================================\n";
+  header += `DATA: ${rec.data}\nCLIENTE: ${rec.cliente}\nPLACA: ${rec.placa}\nPEDRA: ${rec.pedra}\n`;
+  header += "------------------------------------------\nPRODUTO:\n";
+  rec.itens.forEach(it=>{
+    header += `${it.produto}\nQTD: ${it.qtd} ${it.tipo} R$ ${it.valorUnitario}   TOTAL: R$ ${it.total}\n`;
+  });
+  header += "------------------------------------------\n";
+  header += `TOTAL DA NOTA: R$ ${rec.total}\n\nAssinatura:\n______________________________`;
+  return header;
+}
+
+function recordToPrintable(rec){
+  if (Array.isArray(rec.itens) && rec.itens.length) {
+    return buildOSFromRecord(rec);
+  }
+  const t = String(rec.texto || '');
+  return t.replace(/\\n/g, '\n');
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  data.forEach((rec, i)=>{
+    const div = document.createElement('div');
+    div.className = 'os-card';
+    div.innerHTML = `<strong>${rec.cliente}</strong> - TOTAL: R$ ${rec.total || ''}<br><small>${rec.data}</small>`;
+    div.onclick = ()=>openModal(i);
+    list.appendChild(div);
+  });
+}
+
+function openModal(i){
+  currentIndex = i;
+  const rec = data[i];
+  document.getElementById('preview').textContent = recordToPrintable(rec);
+  document.getElementById('backdrop').style.display = 'flex';
+}
+
+document.getElementById('btnReprint').onclick = async ()=>{
+  if (currentIndex<0) return;
+  const txt = recordToPrintable(data[currentIndex]);
+  if (navigator.share){
+    try{ await navigator.share({ text: txt, title:'OS Hartmann' }); }catch{}
+  }else{
+    try{ await navigator.clipboard.writeText(txt); alert('OS copiada! Abra o app da impressora e cole.'); }
+    catch{ alert('Selecione e copie manualmente da prévia.'); }
+  }
+};
+
+document.getElementById('btnDelete').onclick = ()=>{
+  if (currentIndex<0) return;
+  if (confirm('Excluir esta OS?')){
+    data.splice(currentIndex,1);
+    localStorage.setItem('os_arquivadas', JSON.stringify(data));
+    renderList();
+    backdrop.style.display='none';
+  }
+};
+
+document.getElementById('btnDuplicate').onclick = ()=>{
+  if (currentIndex<0) return;
+  localStorage.setItem('duplicar_para_vendas', JSON.stringify(data[currentIndex]));
+  location.href = 'vendas.html';
+};
+
+document.getElementById('btnEdit').onclick = ()=>{
+  if (currentIndex<0) return;
+  localStorage.setItem('editar_os', JSON.stringify(data[currentIndex]));
+  location.href = 'vendas.html';
+};
+
+function load(){
+  try{ data = JSON.parse(localStorage.getItem('os_arquivadas')||'[]'); }
+  catch{ data = []; }
+
+  // MIGRAÇÃO: converte OS antigas com \n
+  let alterou = false;
+  data = data.map(rec => {
+    if ((!rec.itens || !rec.itens.length) && typeof rec.texto === 'string' && rec.texto.includes('\\n')) {
+      const novoTexto = rec.texto.replace(/\\n/g, '\n');
+      alterou = true;
+      return { ...rec, texto: novoTexto };
+    }
+    return rec;
+  });
+  if (alterou) localStorage.setItem('os_arquivadas', JSON.stringify(data));
+
+  renderList();
+}
+
+load();
+</script>
+
+</body>
+</html>    white-space:pre-wrap; word-break:break-word; line-height:1.2; margin:0;
   }
 </style>
 </head>
@@ -622,4 +726,5 @@ No início do vendas.html, você pode adicionar:
 </script>
 </body>
 </html>
+
 

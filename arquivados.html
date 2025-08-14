@@ -1,40 +1,240 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>OS Arquivadas — Irmãos Hartmann</title>
 <style>
   :root{
     --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
-    --border:#2c3448; --green:#10f7a0; --orange:#f59e0b; --blue:#0ea5e9;
+    --border:#2c3448; --green:#10f7a0; --blue:#0ea5e9; --orange:#f59e0b; --red:#ef4444;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
   .wrap{max-width:760px;margin:0 auto;padding:20px}
-  .topbar{display:flex;justify-content:flex-end;margin-bottom:8px}
-  .link-top{font-size:14px;color:#9bd3ff;text-decoration:none;padding:6px 10px;border-radius:10px;border:1px solid var(--border)}
-  .title{font-weight:800;font-size:20px;margin:6px 0 14px}
-  .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 16px 40px rgba(0,0,0,.45);margin-bottom:16px}
-  .rowBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-  .btn{
-    display:flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;
-    font-weight:800;font-size:16px;border:0;cursor:pointer;user-select:none
-  }
-  .btn-green{background:var(--green);color:#001c14}
+  h1{margin:6px 0 12px;font-size:36px}
+  .toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .back{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;text-decoration:none}
+  .card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+  .title{font-weight:800;font-size:18px}
+  .subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .pill{background:#0b1220;border:1px solid var(--border);padding:6px 10px;border-radius:10px;font-weight:700}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
   .btn-blue{background:var(--blue);color:#001018}
+  .btn-green{background:var(--green);color:#001c14}
   .btn-orange{background:var(--orange);color:#1f1300}
-  .btn-outline{background:transparent;color:var(--text);border:2px solid var(--border)}
-  .muted{color:var(--muted);font-size:12px;margin:8px 0 6px}
-  .preview{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    white-space: pre-wrap; word-break: break-word; line-height: 1.2;
-    margin: 6px 0 0; color: var(--text); width: 100%; background: transparent; padding: 0; border: 0;
-  }
-  .empty{color:var(--muted);text-align:center;border:1px dashed var(--border);padding:20px;border-radius:12px}
+  .btn-red{background:var(--red);color:#fff}
 
   /* Modal */
-  .modal-backdrop{
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+  .modal{background:var(--card);border-radius:16px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.65)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .modal-title{font-weight:800;font-size:20px}
+  .x{background:transparent;border:1px solid var(--text);color:var(--text);border-radius:10px;height:36px;padding:0 10px;cursor:pointer}
+  .preview-title{color:var(--muted);font-size:12px;margin:12px 0 6px}
+  .preview{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap; word-break: break-word; line-height:1.2;
+    margin:0; color: var(--text); background:transparent; border:0; padding:0;
+  }
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <h1>OS Arquivadas</h1>
+    <a class="back" href="menu.html">Voltar ao menu</a>
+  </div>
+
+  <div id="lista"></div>
+  <div id="vazio" class="subtitle">Nenhuma OS arquivada ainda.</div>
+</div>
+
+<!-- Modal -->
+<div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Detalhes da OS</div>
+      <button class="x" id="btnClose">Fechar</button>
+    </div>
+
+    <div class="grid3">
+      <button id="btnReprint" class="btn btn-green">Reimprimir</button>
+      <button id="btnDuplicate" class="btn btn-blue">Duplicar p/ Vendas</button>
+      <button id="btnEdit" class="btn btn-orange">Editar</button>
+    </div>
+    <div class="grid2">
+      <button id="btnDelete" class="btn btn-red">Excluir</button>
+    </div>
+
+    <div class="preview-title">Pré-visualização (texto 80mm / 42 colunas)</div>
+    <pre id="preview" class="preview"></pre>
+  </div>
+</div>
+
+<script>
+/* ===== Utils (mesmo layout do vendas.html) ===== */
+const W = 42;
+const money = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const padRight = (s,len)=>{ s=String(s||''); return s.length>len? s.slice(0,len): s + ' '.repeat(len-s.length); };
+const center = (s,len)=>{ s=String(s||''); const L=Math.floor((len-s.length)/2); return ' '.repeat(L)+s+' '.repeat(len-s.length-L); };
+function wrapLines(text, width){
+  if (!text) return [];
+  const words = String(text).split(/\s+/);
+  const lines = []; let line='';
+  words.forEach(w=>{
+    if ((line + (line?' ':'') + w).length <= width) line += (line?' ':'') + w;
+    else { if (line) lines.push(line); while(w.length>width){ lines.push(w.slice(0,width)); w=w.slice(width);} line=w; }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function buildOSFromRecord(rec){
+  const out = [];
+  out.push(center('IRMÃOS HARTMANN', W));
+  out.push(center('ORDEM DE SERVIÇO', W));
+  out.push('='.repeat(W));
+  const dataStr = rec.data || new Date(rec.createdAt||Date.now()).toLocaleString('pt-BR');
+  out.push(padRight(`DATA: ${dataStr}`, W));
+  out.push(padRight(`CLIENTE: ${String(rec.cliente||'').toUpperCase()}`, W));
+  out.push(padRight(`PLACA: ${String(rec.placa||'').toUpperCase()}`, W));
+  out.push(padRight(`PEDRA: ${String(rec.pedra||'').toUpperCase()}`, W));
+  out.push('-'.repeat(W));
+  out.push(padRight('PRODUTO:', W));
+  out.push('');
+
+  let soma = 0;
+  (rec.itens||[]).forEach((it, idx)=>{
+    const nome = String(it.produto||'').toUpperCase();
+    const qtd  = (String(it.qtd).replace('.',','));
+    const tipo = String(it.tipo||'').toUpperCase();      // CX / KG / UN
+    const unit = Number(it.unit ?? it.valorUnitario ?? 0);
+    const subtotal = (Number(it.qtd||0) * unit);
+    soma += subtotal;
+
+    wrapLines(nome, W).forEach(l => out.push(padRight(l, W)));
+
+    const esquerda = `QTD: ${qtd} ${tipo} R$ ${money(unit)}`;
+    const direita  = `TOTAL: R$ ${money(subtotal)}`;
+    const espacos  = W - esquerda.length - direita.length;
+    out.push(esquerda + ' '.repeat(espacos > 0 ? espacos : 1) + direita);
+
+    if (idx < rec.itens.length - 1) out.push('');
+  });
+
+  out.push('-'.repeat(W));
+  const totalNota = `TOTAL DA NOTA: R$ ${money(Number(rec.total || 0) || soma)}`;
+  out.push(' '.repeat(Math.max(0, W - totalNota.length)) + totalNota);
+  out.push('');
+  out.push('Assinatura: __________________________');
+
+  return out.join('\n');
+}
+
+function recordToPrintable(rec){
+  if (Array.isArray(rec.itens) && rec.itens.length) return buildOSFromRecord(rec);
+  const t = String(rec.texto || '');
+  return t.replace(/\\n/g, '\n'); // normaliza legado
+}
+
+/* ===== Estado / Lista ===== */
+const $ = s => document.querySelector(s);
+let data = [];
+
+function loadData(){
+  try{ data = JSON.parse(localStorage.getItem('os_arquivadas')||'[]') || []; }
+  catch{ data = []; }
+
+  // normaliza legado
+  let alterou = false;
+  data = data.map(rec=>{
+    if ((!rec.itens || !rec.itens.length) && typeof rec.texto === 'string' && rec.texto.includes('\\n')){
+      alterou = true;
+      return { ...rec, texto: rec.texto.replace(/\\n/g, '\n') };
+    }
+    return rec;
+  });
+  if (alterou) localStorage.setItem('os_arquivadas', JSON.stringify(data));
+}
+
+function renderList(){
+  const lista = $('#lista');
+  const vazio = $('#vazio');
+  lista.innerHTML = '';
+  if (!data.length){ vazio.style.display='block'; return; }
+  vazio.style.display='none';
+
+  data.forEach((rec,i)=>{
+    const total = rec.total ?? (Array.isArray(rec.itens)? rec.itens.reduce((s,it)=>s+(Number(it.qtd||0)*Number(it.unit||0)),0):0);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="title">${(rec.cliente||'').toUpperCase()}</div>
+      <div class="row">
+        <div class="subtitle">${new Date(rec.createdAt||Date.now()).toLocaleString('pt-BR')}</div>
+        <div class="pill">TOTAL: R$ ${money(total)}</div>
+      </div>
+    `;
+    card.style.cursor='pointer';
+    card.onclick = ()=>openModal(i);
+    lista.appendChild(card);
+  });
+}
+
+/* ===== Modal ===== */
+let currentIndex = -1;
+function openModal(i){
+  currentIndex = i;
+  $('#preview').textContent = recordToPrintable(data[i]);
+  $('#backdrop').style.display='flex';
+}
+function closeModal(){
+  $('#backdrop').style.display='none';
+  currentIndex = -1;
+}
+$('#btnClose').onclick = closeModal;
+
+async function shareText(text){
+  if (navigator.share){
+    try{ await navigator.share({ text, title:'OS Hartmann' }); }catch(e){}
+  }else{
+    try{ await navigator.clipboard.writeText(text); alert('OS copiada! Abra o app da impressora e cole.'); }
+    catch{ alert('Selecione e copie manualmente da prévia.'); }
+  }
+}
+$('#btnReprint').onclick = async ()=>{
+  if (currentIndex<0) return;
+  await shareText(recordToPrintable(data[currentIndex]));
+};
+$('#btnDuplicate').onclick = ()=>{
+  if (currentIndex<0) return;
+  localStorage.setItem('os_draft_from_archive', JSON.stringify(data[currentIndex]));
+  location.href='vendas.html';
+};
+$('#btnEdit').onclick = ()=>{
+  if (currentIndex<0) return;
+  localStorage.setItem('os_editar_from_archive', JSON.stringify({ index: currentIndex, rec: data[currentIndex] }));
+  location.href='vendas.html';
+};
+$('#btnDelete').onclick = ()=>{
+  if (currentIndex<0) return;
+  if (!confirm('Excluir esta OS arquivada?')) return;
+  data.splice(currentIndex,1);
+  localStorage.setItem('os_arquivadas', JSON.stringify(data));
+  closeModal();
+  renderList();
+};
+
+/* init */
+loadData();
+renderList();
+</script>
+</body>
+</html>  .modal-backdrop{
     position:fixed; inset:0; background:rgba(0,0,0,.45);
     display:none; align-items:center; justify-content:center; padding:20px; z-index:20;
   }
@@ -1094,6 +1294,7 @@ No início do vendas.html, você pode adicionar:
 </script>
 </body>
 </html>
+
 
 
 

@@ -1,277 +1,413 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>OS Arquivadas — Irmãos Hartmann</title>
 <style>
   :root{
     --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
-    --border:#2c3448; --green:#10f7a0; --blue:#0ea5e9; --orange:#f59e0b; --red:#ef4444;
+    --border:#2c3448; --green:#10f7a0; --orange:#f59e0b; --blue:#0ea5e9;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
   .wrap{max-width:760px;margin:0 auto;padding:20px}
-  h1{margin:6px 0 12px;font-size:36px}
-  .toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .ghost{opacity:.5;pointer-events:none}
-  .back{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer}
-  .card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid var(--border)}
-  .title{font-weight:800;font-size:18px}
-  .subtitle{color:var(--muted);font-size:13px;margin-top:4px}
-  .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-  .pill{background:#0b1220;border:1px solid var(--border);padding:6px 10px;border-radius:10px;font-weight:700}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
-  .btn-blue{background:var(--blue);color:#001018}
+  .topbar{display:flex;justify-content:flex-end;margin-bottom:8px}
+  .link-top{font-size:14px;color:#9bd3ff;text-decoration:none;padding:6px 10px;border-radius:10px;border:1px solid var(--border)}
+  .title{font-weight:800;font-size:20px;margin:6px 0 14px}
+  .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 16px 40px rgba(0,0,0,.45);margin-bottom:16px}
+  .rowBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;
+    font-weight:800;font-size:16px;border:0;cursor:pointer;user-select:none
+  }
   .btn-green{background:var(--green);color:#001c14}
+  .btn-blue{background:var(--blue);color:#001018}
   .btn-orange{background:var(--orange);color:#1f1300}
-  .btn-red{background:var(--red);color:#fff}
-  /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
-  .modal{background:var(--card);border-radius:16px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.65);}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .modal-title{font-weight:800;font-size:20px}
-  .x{background:transparent;border:1px solid var(--text);color:var(--text);border-radius:10px;height:36px;padding:0 10px;cursor:pointer}
-  .preview-title{color:var(--muted);font-size:12px;margin:12px 0 6px}
+  .btn-outline{background:transparent;color:var(--text);border:2px solid var(--border)}
+  .muted{color:var(--muted);font-size:12px;margin:8px 0 6px}
   .preview{
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    white-space: pre-wrap; word-break: break-word; line-height:1.2;
-    margin:0; color: var(--text);
-    background:transparent; border:0; padding:0;
+    white-space: pre-wrap; word-break: break-word; line-height: 1.2;
+    margin: 6px 0 0; color: var(--text); width: 100%; background: transparent; padding: 0; border: 0;
   }
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-  .sep{border-top:1px solid var(--border);margin:10px 0}
-  a.link { color: var(--blue); text-decoration: none; }
+  .empty{color:var(--muted);text-align:center;border:1px dashed var(--border);padding:20px;border-radius:12px}
+
+  /* Modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:none; align-items:center; justify-content:center; padding:20px; z-index:20;
+  }
+  .modal{background:var(--card); border-radius:16px; max-width:760px; width:100%; max-height:92vh; overflow:auto; padding:16px; box-shadow:0 20px 60px rgba(0,0,0,.65);}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .modal-title{font-weight:800; font-size:18px}
+  .x{background:transparent; border:1px solid var(--border); color:var(--text); border-radius:10px; height:36px; padding:0 10px; cursor:pointer}
+  label{font-size:14px;color:var(--muted);margin-top:8px;display:block}
+  input,select,textarea{
+    width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);
+    background:#0b1220;color:var(--text);margin-top:4px;margin-bottom:8px;text-transform:uppercase;
+  }
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .grid4{display:grid; grid-template-columns:2fr .8fr .8fr .9fr; gap:8px}
+  .item-row{display:flex; gap:8px; align-items:flex-end; margin-bottom:6px}
+  .small{font-size:12px; color:var(--muted)}
+  .sep{border-top:1px solid var(--border); margin:10px 0}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="toprow">
-    <h1>OS Arquivadas</h1>
-    <a class="back" href="menu.html">Voltar ao menu</a>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="link-top" href="menu.html">Voltar ao menu</a>
+    </div>
+
+    <div class="title">OS Arquivadas</div>
+    <div id="lista"></div>
   </div>
 
-  <div id="lista"></div>
-  <div id="vazio" class="subtitle">Nenhuma OS arquivada ainda.</div>
-</div>
+  <!-- Modal de Edição -->
+  <div id="backdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Editar OS arquivada</div>
+        <button class="x" id="fecharModal">Fechar</button>
+      </div>
 
-<!-- Modal -->
-<div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title">Detalhes da OS</div>
-      <button class="x" id="btnClose">Fechar</button>
-    </div>
+      <div id="editForm">
+        <div class="grid2">
+          <div>
+            <label>Cliente</label>
+            <input id="e_cliente" type="text" placeholder="NOME DO CLIENTE">
+          </div>
+          <div>
+            <label>Placa</label>
+            <input id="e_placa" type="text" placeholder="ABC1D23">
+          </div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label>Pedra</label>
+            <input id="e_pedra" type="number" inputmode="numeric" placeholder="07">
+          </div>
+          <div>
+            <label>Observações</label>
+            <input id="e_obs" type="text" placeholder="">
+          </div>
+        </div>
 
-    <div class="grid3">
-      <button id="btnReprint" class="btn btn-green">Reimprimir</button>
-      <button id="btnDuplicate" class="btn btn-blue">Duplicar p/ Vendas</button>
-      <button id="btnEdit" class="btn btn-orange">Editar</button>
-    </div>
-    <div class="grid2">
-      <button id="btnDelete" class="btn btn-red">Excluir</button>
-    </div>
+        <div class="sep"></div>
+        <div class="small">Itens (produto, tipo, qtd, v.unit). Você pode adicionar/remover itens.</div>
+        <div id="itensBox"></div>
+        <button class="btn btn-outline" id="btnAddItem" type="button">+ Adicionar item</button>
 
-    <div class="preview-title">Pré-visualização (texto 80mm / 42 colunas)</div>
-    <pre id="preview" class="preview"></pre>
+        <div class="sep"></div>
+        <div class="small">Pré-visualização (80mm / 42 colunas)</div>
+        <pre id="e_preview" class="preview"></pre>
+
+        <div class="rowBtns" style="margin-top:10px">
+          <button class="btn btn-blue"  id="btnSalvar">Salvar alterações</button>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
 <script>
-/* ==========================
-   Utilitários (iguais ao vendas.html)
-========================== */
-const W = 42;
-const money = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const pad2  = n => String(n).padStart(2,'0');
-const padRight = (s,len)=>{ s=String(s||''); return s.length>len? s.slice(0,len): s + ' '.repeat(len-s.length); };
-const center = (s,len)=>{ s=String(s||''); const L=Math.floor((len-s.length)/2); return ' '.repeat(L)+s+' '.repeat(len-s.length-L); };
-function wrapLines(text, width){
-  if (!text) return [];
-  const words = String(text).split(/\s+/);
-  const lines = []; let line='';
-  words.forEach(w=>{
-    if ((line + (line?' ':'') + w).length <= width) line += (line?' ':'') + w;
-    else { if (line) lines.push(line); while(w.length>width){ lines.push(w.slice(0,width)); w=w.slice(width);} line=w; }
-  });
-  if (line) lines.push(line);
-  return lines;
-}
+  // ---------- Utilidades compartilhadas ----------
+  const $ = s => document.querySelector(s);
+  const money = v => (isNaN(v)?0:v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const pad2 = n => String(n).padStart(2,'0');
 
-/* Monta OS igual ao vendas.html usando registro com itens */
-function buildOSFromRecord(rec){
-  const out = [];
-  out.push(center('IRMÃOS HARTMANN', W));
-  out.push(center('ORDEM DE SERVIÇO', W));
-  out.push('='.repeat(W));
-  const dataStr = rec.data || '';
-  out.push(padRight(`DATA: ${dataStr}`, W));
-  out.push(padRight(`CLIENTE: ${String(rec.cliente||'').toUpperCase()}`, W));
-  out.push(padRight(`PLACA: ${String(rec.placa||'').toUpperCase()}`, W));
-  out.push(padRight(`PEDRA: ${String(rec.pedra||'').toUpperCase()}`, W));
-  out.push('-'.repeat(W));
-  out.push(padRight('PRODUTO:', W));
-  out.push('');
+  const W = 42;
+  const padRight = (s,len)=>{ s=String(s||''); return s.length>len? s.slice(0,len): s + ' '.repeat(len-s.length); };
+  const center = (s,len)=>{ s=String(s||''); const L=Math.floor((len-s.length)/2); return ' '.repeat(L)+s+' '.repeat(len-s.length-L); };
 
-  let soma = 0;
-  (rec.itens||[]).forEach((it, idx)=>{
-    const nome = String(it.produto||'').toUpperCase();
-    const qtd  = (String(it.qtd).replace('.',','));
-    const tipo = String(it.tipo||'').toUpperCase(); // CX / KG / UN
-    const unit = Number(it.unit ?? it.valorUnitario ?? 0);
-    const subtotal = (Number(it.qtd||0) * unit);
-    soma += subtotal;
-
-    wrapLines(nome, W).forEach(l => out.push(padRight(l, W)));
-
-    const esquerda = `QTD: ${qtd} ${tipo} R$ ${money(unit)}`;
-    const direita  = `TOTAL: R$ ${money(subtotal)}`;
-    const espacos  = W - esquerda.length - direita.length;
-    out.push(esquerda + ' '.repeat(espacos > 0 ? espacos : 1) + direita);
-
-    if (idx < rec.itens.length - 1) out.push('');
-  });
-
-  out.push('-'.repeat(W));
-  const totalNota = `TOTAL DA NOTA: R$ ${money(Number(rec.total || 0) || soma)}`;
-  out.push(' '.repeat(Math.max(0, W - totalNota.length)) + totalNota);
-  out.push('');
-  out.push('Assinatura: __________________________');
-
-  return out.join('\n');
-}
-
-/* Usa itens (novo) ou texto legado com \n normalizado */
-function recordToPrintable(rec){
-  if (Array.isArray(rec.itens) && rec.itens.length) {
-    return buildOSFromRecord(rec);
+  function wrapLines(text, width){
+    if (!text) return [];
+    const words = String(text).split(/\s+/);
+    const lines = []; let line='';
+    words.forEach(w=>{
+      if ((line + (line?' ':'') + w).length <= width) line += (line?' ':'') + w;
+      else { if (line) lines.push(line); while(w.length>width){ lines.push(w.slice(0,width)); w=w.slice(width);} line=w; }
+    });
+    if (line) lines.push(line);
+    return lines;
   }
-  const t = String(rec.texto || '');
-  return t.replace(/\\n/g, '\n'); // legado
-}
 
-/* ==========================
-   Estado / Renderização
-========================== */
-const $ = s => document.querySelector(s);
-let data = [];
+  function normalizeText(t){
+    return String(t || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\\n/g, '\n');
+  }
 
-function loadData(){
-  try{ data = JSON.parse(localStorage.getItem('os_arquivadas')||'[]') || []; }
-  catch{ data = []; }
+  function parseNum(str){
+    if (str === '' || str === null || str === undefined) return 0;
+    return parseFloat(String(str).replace('.','').replace(',','.')) || 0;
+  }
 
-  // Migração leve: normaliza texto legado com "\n"
-  let alterou = false;
-  data = data.map(rec => {
-    if ((!rec.itens || !rec.itens.length) && typeof rec.texto === 'string' && rec.texto.includes('\\n')) {
-      const novoTexto = rec.texto.replace(/\\n/g, '\n');
-      alterou = true;
-      return { ...rec, texto: novoTexto };
+  // Monta OS no MESMO formato do vendas.html
+  function buildOSFromData(data){
+    const d = new Date(data.createdAt || Date.now());
+    const dataStr = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+    const cliente = (data.cliente||'').toUpperCase();
+    const placa   = (data.placa||'').toUpperCase();
+    const pedra   = (data.pedra||'').toUpperCase();
+    const obs     = (data.obs||'').trim().toUpperCase();
+
+    const out = [];
+    out.push(center('IRMÃOS HARTMANN', W));
+    out.push(center('ORDEM DE SERVIÇO', W));
+    out.push('='.repeat(W));
+    out.push(padRight(`DATA: ${dataStr}`, W));
+    out.push(padRight(`CLIENTE: ${cliente}`, W));
+    out.push(padRight(`PLACA: ${placa}`, W));
+    out.push(padRight(`PEDRA: ${pedra}`, W));
+    out.push('-'.repeat(W));
+    out.push(padRight('PRODUTO:', W));
+    out.push('');
+
+    if (obs){
+      wrapLines('OBS: ' + obs, W).forEach(l => out.push(padRight(l, W)));
+      out.push('');
     }
-    return rec;
-  });
-  if (alterou) localStorage.setItem('os_arquivadas', JSON.stringify(data));
-}
 
-function renderList(){
-  const lista = $('#lista');
-  const vazio = $('#vazio');
-  lista.innerHTML = '';
-  if (!data.length){
-    vazio.style.display = 'block';
-    return;
+    let soma = 0;
+    (data.itens || []).forEach((it, idx)=>{
+      const qtd  = parseNum(it.qtd);
+      const unit = parseNum(it.unit);
+      const subtotal = qtd * unit;
+      soma += subtotal;
+
+      wrapLines((it.produto||'').toUpperCase(), W).forEach(l => out.push(padRight(l, W)));
+
+      const esquerda = `QTD: ${String(qtd).replace('.',',')} ${String(it.tipo||'').toUpperCase()} R$ ${money(unit)}`;
+      const direita  = `TOTAL: R$ ${money(subtotal)}`;
+      const espacos  = W - esquerda.length - direita.length;
+      out.push(esquerda + ' '.repeat(espacos > 0 ? espacos : 1) + direita);
+
+      if (idx < data.itens.length - 1) out.push('');
+    });
+
+    out.push('-'.repeat(W));
+    const totalNota = `TOTAL DA NOTA: R$ ${money(soma)}`;
+    out.push(' '.repeat(Math.max(0, W - totalNota.length)) + totalNota);
+    out.push('');
+    out.push('Assinatura: __________________________');
+
+    return out.join('\n');
   }
-  vazio.style.display = 'none';
 
-  data.forEach((rec, i)=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    const total = rec.total ?? (Array.isArray(rec.itens)? rec.itens.reduce((s,it)=>s + (Number(it.qtd||0)*Number(it.unit||0)),0) : 0);
-    card.innerHTML = `
-      <div class="title">${(rec.cliente||'').toUpperCase()}</div>
-      <div class="row">
-        <div class="subtitle">${new Date(rec.createdAt||Date.now()).toLocaleString('pt-BR')}</div>
-        <div class="pill">TOTAL: R$ ${money(total)}</div>
-      </div>
-    `;
-    card.style.cursor = 'pointer';
-    card.onclick = ()=>openModal(i);
-    lista.appendChild(card);
-  });
-}
+  // ---------- Lista ----------
+  function carregar(){
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem('os_arquivadas') || '[]'); } catch(e){ list = []; }
 
-/* ==========================
-   Modal
-========================== */
-let currentIndex = -1;
+    const cont = $('#lista');
+    cont.innerHTML = '';
 
-function openModal(i){
-  currentIndex = i;
-  const rec = data[i];
-  $('#preview').textContent = recordToPrintable(rec);
-  $('#backdrop').style.display = 'flex';
-}
+    if (!list.length){
+      cont.innerHTML = '<div class="empty">Nenhuma OS arquivada ainda.</div>';
+      return;
+    }
 
-function closeModal(){
-  $('#backdrop').style.display = 'none';
-  currentIndex = -1;
-}
+    list
+      .map((x,i)=>({idx:i, ...x}))
+      .sort((a,b)=> b.createdAt - a.createdAt)
+      .forEach(item=>{
+        const card = document.createElement('div');
+        card.className = 'card';
 
-$('#btnClose').onclick = closeModal;
+        const quando = item.createdAt ? new Date(item.createdAt) : null;
+        const cab = document.createElement('div');
+        cab.className = 'muted';
+        cab.textContent =
+          (quando ? `Salvo: ${quando.toLocaleDateString()} ${quando.toLocaleTimeString().slice(0,5)} • ` : '') +
+          (item.cliente ? `Cliente: ${item.cliente.toUpperCase()}` : '');
+        card.appendChild(cab);
 
-/* Ações do modal */
-async function shareText(text){
-  if (navigator.share){
-    try{ await navigator.share({ text, title:'OS Hartmann' }); }catch(e){}
-  }else{
-    try{ await navigator.clipboard.writeText(text); alert('OS copiada! Abra o app da impressora e cole.'); }
-    catch{ alert('Selecione e copie manualmente da prévia.'); }
+        const pre = document.createElement('pre');
+        pre.className = 'preview';
+        pre.textContent = normalizeText(item.texto || buildOSFromData(item));
+        card.appendChild(pre);
+
+        const row = document.createElement('div');
+        row.className = 'rowBtns';
+
+        const btnPrint = document.createElement('button');
+        btnPrint.className = 'btn btn-green';
+        btnPrint.textContent = 'Imprimir';
+        btnPrint.onclick = async ()=>{
+          const texto = normalizeText(item.texto || buildOSFromData(item));
+          if (navigator.share){
+            try{ await navigator.share({ text: texto, title: 'OS Hartmann' }); }catch(e){}
+          }else{
+            try{ await navigator.clipboard.writeText(texto); alert('OS copiada! Abra o app da impressora e cole.'); }
+            catch(e){ alert('Não foi possível copiar. Selecione o texto manualmente.'); }
+          }
+        };
+        row.appendChild(btnPrint);
+
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn btn-blue';
+        btnEdit.textContent = 'Editar';
+        btnEdit.onclick = ()=> abrirEditor(item.idx);
+        row.appendChild(btnEdit);
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn btn-orange';
+        btnDel.textContent = 'Excluir';
+        btnDel.onclick = ()=>{
+          if (!confirm('Remover esta OS arquivada?')) return;
+          let all = JSON.parse(localStorage.getItem('os_arquivadas') || '[]');
+          all.splice(item.idx, 1);
+          localStorage.setItem('os_arquivadas', JSON.stringify(all));
+          carregar();
+        };
+        row.appendChild(btnDel);
+
+        card.appendChild(row);
+
+        cont.appendChild(card);
+      });
   }
-}
 
-$('#btnReprint').onclick = async ()=>{
-  if (currentIndex<0) return;
-  const txt = recordToPrintable(data[currentIndex]);
-  await shareText(txt);
-};
+  // ---------- Editor (Modal) ----------
+  let editIndex = null;
+  function abrirEditor(idx){
+    editIndex = idx;
+    const all = JSON.parse(localStorage.getItem('os_arquivadas') || '[]');
+    const it  = all[idx];
 
-$('#btnDuplicate').onclick = ()=>{
-  if (currentIndex<0) return;
-  const rec = data[currentIndex];
-  // Envia um rascunho para vendas.html
-  localStorage.setItem('os_draft_from_archive', JSON.stringify(rec));
-  location.href = 'vendas.html';
-};
+    $('#e_cliente').value = (it.cliente||'').toUpperCase();
+    $('#e_placa').value   = (it.placa||'').toUpperCase();
+    $('#e_pedra').value   = it.pedra || '';
+    $('#e_obs').value     = (it.obs||'').toUpperCase();
 
-$('#btnEdit').onclick = ()=>{
-  if (currentIndex<0) return;
-  const rec = data[currentIndex];
-  // Sinalizamos edição para o vendas.html carregar e permitir editar
-  localStorage.setItem('os_editar_from_archive', JSON.stringify({ index: currentIndex, rec }));
-  location.href = 'vendas.html';
-};
+    // monta itens
+    const box = $('#itensBox');
+    box.innerHTML = '';
+    (it.itens||[]).forEach((obj,i)=> addItemRow(obj.produto||'', obj.tipo||'CX', obj.qtd||0, obj.unit||0));
 
-$('#btnDelete').onclick = ()=>{
-  if (currentIndex<0) return;
-  if (!confirm('Excluir esta OS arquivada?')) return;
-  data.splice(currentIndex,1);
-  localStorage.setItem('os_arquivadas', JSON.stringify(data));
-  closeModal();
-  renderList();
-};
+    // prévia
+    atualizarPreviewEditor();
 
-/* init */
-loadData();
-renderList();
+    // abrir
+    $('#backdrop').style.display = 'flex';
+  }
+
+  $('#fecharModal').onclick = ()=>{ $('#backdrop').style.display = 'none'; };
+
+  function addItemRow(produto='', tipo='CX', qtd=0, unit=0){
+    const row = document.createElement('div');
+    row.className = 'item-row';
+
+    const g = document.createElement('div');
+    g.className = 'grid4';
+    row.appendChild(g);
+
+    const inpProd = document.createElement('input');
+    inpProd.placeholder='PRODUTO';
+    inpProd.value = String(produto).toUpperCase();
+    g.appendChild(inpProd);
+
+    const selTipo = document.createElement('select');
+    selTipo.innerHTML = `<option value="CX">CX</option><option value="KG">KG</option>`;
+    selTipo.value = String(tipo||'CX').toUpperCase();
+    g.appendChild(selTipo);
+
+    const inpQtd = document.createElement('input');
+    inpQtd.type='number'; inpQtd.step='0.01'; inpQtd.inputMode='decimal';
+    inpQtd.placeholder='QTD'; inpQtd.value= qtd;
+    g.appendChild(inpQtd);
+
+    const inpUnit = document.createElement('input');
+    inpUnit.type='text'; inpUnit.inputMode='numeric'; inpUnit.placeholder='0,00';
+    // máscara dinheiro
+    inpUnit.value = (parseFloat(unit)||0).toFixed(2).replace('.',',');
+    inpUnit.addEventListener('input', e=>{
+      let val = e.target.value.replace(/\D/g, '');
+      val = (parseInt(val || '0', 10) / 100).toFixed(2);
+      e.target.value = val.replace('.', ',');
+      atualizarPreviewEditor();
+    });
+
+    g.appendChild(inpUnit);
+
+    const btnRem = document.createElement('button');
+    btnRem.className='btn btn-outline';
+    btnRem.textContent='Remover';
+    btnRem.type='button';
+    btnRem.onclick=()=>{ row.remove(); atualizarPreviewEditor(); };
+    row.appendChild(btnRem);
+
+    [inpProd, selTipo, inpQtd].forEach(el=>{
+      el.addEventListener('input', ()=>{
+        if (el === inpProd) el.value = el.value.toUpperCase();
+        atualizarPreviewEditor();
+      });
+    });
+
+    $('#itensBox').appendChild(row);
+  }
+
+  $('#btnAddItem').onclick = ()=> addItemRow('','CX',0,0);
+
+  function coletarFormEditor(){
+    const itens = [];
+    document.querySelectorAll('#itensBox .item-row').forEach(r=>{
+      const [prod, tipo, qtd, unit] = r.querySelectorAll('input,select');
+      itens.push({
+        produto: (prod.value||'').toUpperCase(),
+        tipo: (tipo.value||'CX').toUpperCase(),
+        qtd: parseNum(qtd.value),
+        unit: parseNum(unit.value)
+      });
+    });
+
+    return {
+      cliente: ($('#e_cliente').value||'').toUpperCase(),
+      placa: ($('#e_placa').value||'').toUpperCase(),
+      pedra: ($('#e_pedra').value||''),
+      obs: ($('#e_obs').value||'').toUpperCase(),
+      itens
+    };
+  }
+
+  function atualizarPreviewEditor(){
+    const base = coletarFormEditor();
+    base.createdAt = Date.now();
+    $('#e_preview').textContent = buildOSFromData(base);
+  }
+
+  // Atualiza prévia quando campos do cabeçalho mudam
+  ['e_cliente','e_placa','e_pedra','e_obs'].forEach(id=>{
+    $('#'+id).addEventListener('input', e=>{
+      if (id!=='e_pedra'){ // manter uppercase para textos
+        const pos = e.target.selectionStart;
+        e.target.value = e.target.value.toUpperCase();
+        e.target.setSelectionRange(pos,pos);
+      }
+      atualizarPreviewEditor();
+    });
+  });
+
+  $('#btnSalvar').onclick = ()=>{
+    if (editIndex===null) return;
+    const all = JSON.parse(localStorage.getItem('os_arquivadas') || '[]');
+    const original = all[editIndex] || {};
+    const novo = {...original, ...coletarFormEditor()};
+    // Regenera o texto da OS
+    novo.texto = buildOSFromData(novo);
+    all[editIndex] = novo;
+    localStorage.setItem('os_arquivadas', JSON.stringify(all));
+    $('#backdrop').style.display = 'none';
+    carregar();
+  };
+
+  carregar();
 </script>
 </body>
-</html><div class="preview" id="preview"></div>
-</div>
-</div>
-
-<script>
-let data = [];
+</html>et data = [];
 let currentIndex = -1;
 
 function buildOSFromRecord(rec){
@@ -958,6 +1094,7 @@ No início do vendas.html, você pode adicionar:
 </script>
 </body>
 </html>
+
 
 
 

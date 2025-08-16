@@ -1,40 +1,96 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>OS Arquivadas — Irmãos Hartmann</title>
-<style>
-  :root{
-    --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; --border:#2c3448;
-    --green:#10f7a0; --blue:#0ea5e9; --danger:#ef4444;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
-  .wrap{max-width:760px;margin:0 auto;padding:20px}
-  h1{font-size:38px;line-height:1.1;margin:6px 0 12px}
-  .top{display:flex;justify-content:space-between;align-items:center}
-  .back{background:transparent;border:1px solid var(--border);color:var(--text);
-        padding:10px 14px;border-radius:12px;text-decoration:none}
-  .list{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
-  .os-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer}
-  .os-card:hover{outline:2px solid #23314d}
-  .os-top{display:flex;justify-content:space-between;gap:10px}
-  .cliente{font-weight:800;font-size:22px}
-  .total{background:#0b1220;border:1px solid var(--border);padding:6px 10px;border-radius:10px}
-  .muted{color:var(--muted);font-size:14px;margin-top:6px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OS Arquivadas</title>
+  <link rel="stylesheet" href="style.css">
 
-  /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;
-                  align-items:center;justify-content:center;padding:20px;z-index:20}
-  .modal{background:var(--card);border-radius:16px;max-width:760px;width:100%;max-height:92vh;
-         overflow:auto;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.65)}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .modal-title{font-weight:800;font-size:18px}
-  .x{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:10px;
-     height:36px;padding:0 10px;cursor:pointer}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0f1a;
+      color: #fff;
+      padding: 16px;
+    }
 
-  .row{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      background: transparent;
+      border: 1px solid #fff;
+      border-radius: 10px;
+      padding: 8px 16px;
+      color: #fff;
+      cursor: pointer;
+      float: right;
+    }
+
+    .card {
+      background: #141a2a;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px 0;
+      font-size: 20px;
+    }
+
+    .total {
+      background: #1f2937;
+      padding: 6px 12px;
+      border-radius: 8px;
+      float: right;
+    }
+
+    .preview {
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: transparent;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed #555;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    OS Arquivadas
+    <button class="back-btn" onclick="window.location.href='index.html'">Voltar ao menu</button>
+  </h1>
+
+  <div id="osList"></div>
+
+  <script>
+    // Recupera dados do localStorage
+    const osListDiv = document.getElementById("osList");
+    const arquivadas = JSON.parse(localStorage.getItem("arquivados")) || [];
+
+    if (arquivadas.length === 0) {
+      osListDiv.innerHTML = "<p>Nenhuma OS arquivada ainda.</p>";
+    } else {
+      arquivadas.forEach((os, index) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <h2>${os.cliente} <span class="total">TOTAL: R$ ${os.total.toFixed(2)}</span></h2>
+          <small>${os.data}</small>
+          <div class="preview">${os.preview}</div>
+        `;
+        osListDiv.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>  .row{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
   .btn{height:44px;border:0;border-radius:12px;padding:0 14px;font-weight:800;cursor:pointer}
   .btn-blue{background:var(--blue);color:#001018}
   .btn-green{background:var(--green);color:#001c14}
@@ -1745,6 +1801,7 @@ No início do vendas.html, você pode adicionar:
 </script>
 </body>
 </html>
+
 
 
 
